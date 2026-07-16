@@ -49,8 +49,30 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 ### Деплой
 
-Готов `render.yaml` — на Render'е достаточно подключить репозиторий, задать
-секреты (`OPENROUTER_API_KEY`, SMTP-креды, `OWNER_EMAIL`) и нажать Deploy.
+Готов `render.yaml` — на Render'е достаточно подключить репозиторий как Blueprint,
+задать секреты (`OPENROUTER_API_KEY`, `RESEND_API_KEY`, SMTP-креды, `OWNER_EMAIL`)
+и нажать Deploy. Живой инстанс: https://developer-landing-api-rzqa.onrender.com
+
+**Особенности и подводные камни (по-честному):**
+
+- **Render Free блокирует исходящий SMTP** (25/465/587). Именно поэтому email-сервис
+  умеет две стратегии: если задан `RESEND_API_KEY` — идёт HTTP-вызов на api.resend.com;
+  если нет — обычный SMTP (это работает локально). Детект в
+  `app/services/email.py::_send`.
+- **Resend без верифицированного домена** пускает письма только на email аккаунта
+  Resend. Для боевого использования нужно верифицировать любой свой домен
+  (`resend.com/domains` → добавить DNS-записи → сменить `RESEND_FROM` на
+  `noreply@своё-домен`). В тестовом деплое `OWNER_EMAIL` совпадает с email
+  Resend-аккаунта.
+- **OpenRouter регулярно ротирует бесплатные модели.** Сейчас в `render.yaml`
+  прописана `nvidia/nemotron-3-ultra-550b-a55b:free`. Если провайдер её снимет —
+  достаточно поменять переменную `OPENROUTER_MODEL` в Render Environment на любую
+  актуальную с https://openrouter.ai/models?q=free (перезапуск не нужен, Render
+  сам передеплоит).
+- **Free-инстанс Render засыпает** после 15 минут неактивности. Первый запрос
+  после сна занимает ~30 сек (cold start).
+- **Python версия закреплена на 3.12.7** — иначе Render по дефолту берёт свежий
+  3.14, а под него ещё нет prebuilt wheels для pydantic-core и т.п.
 
 ## Стек
 

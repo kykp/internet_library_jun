@@ -40,7 +40,7 @@ services:
       - key: OPENROUTER_API_KEY
         sync: false
       - key: OPENROUTER_MODEL
-        value: nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free
+        value: nvidia/nemotron-3-ultra-550b-a55b:free
       - key: OPENROUTER_BASE_URL
         value: https://openrouter.ai/api/v1
       - key: OPENROUTER_REFERER
