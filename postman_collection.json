@@ -1,0 +1,74 @@
+{
+  "info": {
+    "name": "Developer Landing API",
+    "description": "Контактная форма с AI-анализом и email-уведомлениями.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "POST /api/contact — валидная заявка",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/contact",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "contact"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Иван Петров\",\n  \"email\": \"ivan@example.com\",\n  \"phone\": \"+7 999 123-45-67\",\n  \"comment\": \"Здравствуйте! Ищу backend-разработчика на проект, есть техническое задание, готов обсудить бюджет и сроки.\"\n}"
+        }
+      }
+    },
+    {
+      "name": "POST /api/contact — ошибка валидации",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/contact",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "contact"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"\",\n  \"email\": \"not-an-email\",\n  \"phone\": \"abc\",\n  \"comment\": \"x\"\n}"
+        }
+      }
+    },
+    {
+      "name": "GET /api/health",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "health"]
+        }
+      }
+    },
+    {
+      "name": "GET /api/metrics",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/metrics",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "metrics"]
+        }
+      }
+    }
+  ]
+}

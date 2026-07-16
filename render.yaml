@@ -1,0 +1,45 @@
+services:
+  - type: web
+    name: developer-landing-api
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: CORS_ORIGINS
+        sync: false
+      - key: OWNER_EMAIL
+        sync: false
+      - key: OWNER_NAME
+        sync: false
+      - key: SMTP_HOST
+        value: smtp.yandex.ru
+      - key: SMTP_PORT
+        value: 465
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+      - key: SMTP_USE_TLS
+        value: true
+      - key: RATE_LIMIT_MAX
+        value: 5
+      - key: RATE_LIMIT_WINDOW_SECONDS
+        value: 600
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_MODEL
+        value: meta-llama/llama-3.1-8b-instruct:free
+      - key: OPENROUTER_BASE_URL
+        value: https://openrouter.ai/api/v1
+      - key: OPENROUTER_REFERER
+        sync: false
+      - key: OPENROUTER_APP_TITLE
+        value: Developer Landing
+      - key: AI_TIMEOUT_SECONDS
+        value: 10
