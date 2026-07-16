@@ -9,7 +9,8 @@ rate limit, отправка писем на Яндекс.Почту, автом
 
 ### Локально
 
-Нужен Python 3.11+ (проверял на 3.11 и 3.13).
+Нужен Python 3.12+ (проверял на 3.12 и 3.13). Версия для деплоя закреплена
+в `runtime.txt` / `.python-version` = 3.12.7.
 
 ```bash
 git clone <repo>
@@ -53,7 +54,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ## Стек
 
 **Backend**
-- Python 3.11+
+- Python 3.12+
 - FastAPI + Uvicorn (ASGI)
 - Pydantic v2 — валидация и парсинг
 - Pydantic Settings — загрузка `.env`
