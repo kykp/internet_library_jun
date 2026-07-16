@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Konstantin — Backend Developer</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --text: #e8e8ea;
+    --muted: #8b8f99;
+    --accent: #6aa9ff;
+    --danger: #ff6b6b;
+    --ok: #4ecb71;
+    --border: #23272f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", Roboto, Inter, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+  }
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 64px 20px 80px;
+  }
+  header h1 {
+    font-size: 2rem;
+    margin: 0 0 6px;
+    letter-spacing: -0.5px;
+  }
+  header p.lead {
+    color: var(--muted);
+    margin: 0 0 8px;
+  }
+  section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin-top: 40px;
+  }
+  h2 {
+    margin: 0 0 14px;
+    font-size: 1.15rem;
+  }
+  form { display: grid; gap: 14px; }
+  label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; }
+  input, textarea {
+    width: 100%;
+    background: #0c0e12;
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 11px 12px;
+    font: inherit;
+  }
+  input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  textarea { min-height: 110px; resize: vertical; }
+  button {
+    background: var(--accent);
+    color: #0b1220;
+    border: 0;
+    border-radius: 8px;
+    padding: 12px 18px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  button:disabled { opacity: 0.6; cursor: not-allowed; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 520px) { .row2 { grid-template-columns: 1fr; } }
+  .msg {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 0.92rem;
+    display: none;
+  }
+  .msg.ok  { background: rgba(78, 203, 113, 0.12); color: var(--ok); display: block; }
+  .msg.err { background: rgba(255, 107, 107, 0.12); color: var(--danger); display: block; }
+  .field-err { color: var(--danger); font-size: 0.8rem; margin-top: 4px; display: none; }
+  .field-err.on { display: block; }
+  footer { color: var(--muted); font-size: 0.85rem; margin-top: 32px; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Konstantin Revutsky</h1>
+    <p class="lead">Backend developer — Python, FastAPI, интеграции, AI</p>
+    <p><a href="/docs">API документация →</a></p>
+  </header>
+
+  <section>
+    <h2>Связаться со мной</h2>
+    <form id="contactForm" novalidate>
+      <div class="row2">
+        <div>
+          <label for="name">Имя</label>
+          <input id="name" name="name" required minlength="2" maxlength="100" autocomplete="name">
+          <div class="field-err" data-for="name"></div>
+        </div>
+        <div>
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required autocomplete="email">
+          <div class="field-err" data-for="email"></div>
+        </div>
+      </div>
+      <div>
+        <label for="phone">Телефон</label>
+        <input id="phone" name="phone" required minlength="6" maxlength="32" placeholder="+7 999 123-45-67" autocomplete="tel">
+        <div class="field-err" data-for="phone"></div>
+      </div>
+      <div>
+        <label for="comment">Комментарий</label>
+        <textarea id="comment" name="comment" required minlength="5" maxlength="2000" placeholder="Расскажите вкратце, чем могу помочь"></textarea>
+        <div class="field-err" data-for="comment"></div>
+      </div>
+      <div>
+        <button id="submitBtn" type="submit">Отправить</button>
+      </div>
+      <div id="result" class="msg"></div>
+    </form>
+  </section>
+
+  <footer>
+    Все обращения обрабатываются автоматически. Копия ответа придёт вам на email.
+  </footer>
+</main>
+
+<script>
+  const form = document.getElementById('contactForm');
+  const btn = document.getElementById('submitBtn');
+  const result = document.getElementById('result');
+  const fieldErrors = document.querySelectorAll('.field-err');
+
+  function clearErrors() {
+    result.className = 'msg';
+    result.textContent = '';
+    fieldErrors.forEach(el => { el.classList.remove('on'); el.textContent = ''; });
+  }
+
+  function showFieldError(field, message) {
+    const el = document.querySelector(`.field-err[data-for="${field}"]`);
+    if (el) { el.textContent = message; el.classList.add('on'); }
+  }
+
+  function showResult(kind, text) {
+    result.className = 'msg ' + kind;
+    result.textContent = text;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearErrors();
+
+    const payload = {
+      name: form.name.value.trim(),
+      email: form.email.value.trim(),
+      phone: form.phone.value.trim(),
+      comment: form.comment.value.trim(),
+    };
+
+    btn.disabled = true;
+    btn.textContent = 'Отправляем…';
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok) {
+        showResult('ok', data.message || 'Спасибо, заявка отправлена.');
+        form.reset();
+      } else if (res.status === 422 && data.error?.details) {
+        data.error.details.forEach(d => showFieldError(d.field, d.message));
+        showResult('err', 'Проверьте корректность полей формы.');
+      } else if (res.status === 429) {
+        showResult('err', data.error?.message || 'Слишком много запросов, повторите позже.');
+      } else {
+        showResult('err', data.error?.message || 'Не удалось отправить заявку. Попробуйте позже.');
+      }
+    } catch (err) {
+      showResult('err', 'Сеть недоступна. Проверьте подключение.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Отправить';
+    }
+  });
+</script>
+</body>
+</html>
