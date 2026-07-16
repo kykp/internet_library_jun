@@ -2,6 +2,7 @@ import logging
 from email.message import EmailMessage
 
 import aiosmtplib
+import httpx
 
 from app.core.config import settings
 from app.core.errors import EmailSendError
@@ -12,6 +13,7 @@ from app.services import email_templates as tpl
 log = logging.getLogger(__name__)
 
 SMTP_TIMEOUT_SECONDS = 15
+HTTP_TIMEOUT_SECONDS = 15
 
 
 async def send_owner_notification(
@@ -45,6 +47,56 @@ async def _send(
     html_body: str,
     reply_to: str | None = None,
 ) -> None:
+    # Приоритет — Resend (HTTP), т.к. Render Free блокирует исходящий SMTP.
+    # SMTP оставлен для локальной разработки и деплоев без блокировки портов.
+    if settings.resend_api_key:
+        await _send_via_resend(to=to, subject=subject, text=text, html_body=html_body, reply_to=reply_to)
+        return
+    await _send_via_smtp(to=to, subject=subject, text=text, html_body=html_body, reply_to=reply_to)
+
+
+async def _send_via_resend(
+    *,
+    to: list[str],
+    subject: str,
+    text: str,
+    html_body: str,
+    reply_to: str | None,
+) -> None:
+    body = {
+        "from": settings.resend_from,
+        "to": to,
+        "subject": subject,
+        "html": html_body,
+        "text": text,
+    }
+    if reply_to:
+        body["reply_to"] = reply_to
+
+    headers = {
+        "Authorization": f"Bearer {settings.resend_api_key}",
+        "Content-Type": "application/json",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=HTTP_TIMEOUT_SECONDS) as client:
+            r = await client.post("https://api.resend.com/emails", json=body, headers=headers)
+        if r.status_code >= 400:
+            log.error("resend send failed to %s: %s %s", to, r.status_code, r.text)
+            raise EmailSendError("Не удалось отправить письмо")
+        log.info("email sent via resend to %s: %s", to, subject)
+    except (httpx.HTTPError, OSError, TimeoutError) as e:
+        log.error("resend request failed to %s: %s", to, e)
+        raise EmailSendError("Не удалось отправить письмо") from e
+
+
+async def _send_via_smtp(
+    *,
+    to: list[str],
+    subject: str,
+    text: str,
+    html_body: str,
+    reply_to: str | None,
+) -> None:
     if not settings.smtp_user or not settings.smtp_password:
         raise EmailSendError("SMTP не сконфигурирован")
 
@@ -70,8 +122,7 @@ async def _send(
             start_tls=not use_ssl and settings.smtp_use_tls,
             timeout=SMTP_TIMEOUT_SECONDS,
         )
-        log.info("email sent to %s: %s", to, subject)
+        log.info("email sent via smtp to %s: %s", to, subject)
     except (aiosmtplib.SMTPException, OSError, TimeoutError) as e:
-        # Не отдаём деталь SMTP наружу — только в лог. Клиенту — общий текст.
         log.error("smtp send failed to %s: %s", to, e)
         raise EmailSendError("Не удалось отправить письмо") from e

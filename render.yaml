@@ -33,6 +33,10 @@ services:
         value: 5
       - key: RATE_LIMIT_WINDOW_SECONDS
         value: 600
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM
+        value: onboarding@resend.dev
       - key: OPENROUTER_API_KEY
         sync: false
       - key: OPENROUTER_MODEL

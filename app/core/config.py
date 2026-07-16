@@ -1,7 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import EmailStr, Field
+from pydantic import EmailStr, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -48,8 +48,31 @@ class Settings(BaseSettings):
     openrouter_app_title: str = "Developer Landing"
     ai_timeout_seconds: int = Field(default=10, ge=1, le=60)
 
+    # email via HTTP (Resend) — приоритетнее SMTP на хостингах, режущих порты
+    resend_api_key: str = ""
+    resend_from: str = "onboarding@resend.dev"
+
     # storage
     storage_dir: str = str(BASE_DIR / "storage")
+
+    # Значения из окружения часто прилетают с лидирующим/трейлинг пробелом
+    # (копипаст в UI хостинга), а httpx не пропускает пробел в заголовках.
+    @field_validator(
+        "cors_origins",
+        "openrouter_api_key",
+        "openrouter_base_url",
+        "openrouter_referer",
+        "openrouter_app_title",
+        "resend_api_key",
+        "resend_from",
+        "smtp_user",
+        "smtp_password",
+        "smtp_from",
+        mode="before",
+    )
+    @classmethod
+    def _strip_ws(cls, v):
+        return v.strip() if isinstance(v, str) else v
 
     @property
     def cors_origins_list(self) -> list[str]:

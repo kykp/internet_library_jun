@@ -41,6 +41,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 | `OWNER_EMAIL` | Куда приходят уведомления о новых заявках |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | SMTP-креды (использую Яндекс, но подойдёт любой) |
 | `SMTP_USE_TLS` | `true` для STARTTLS (587) или для implicit SSL (465) |
+| `RESEND_API_KEY`, `RESEND_FROM` | HTTP-провайдер писем ([Resend](https://resend.com)). Если задан — используется вместо SMTP. Нужен для деплоя на хостингах вроде Render Free, где исходящий SMTP заблокирован |
 | `OPENROUTER_API_KEY` | Ключ OpenRouter. Если пустой — сервис работает через fallback без AI |
 | `OPENROUTER_MODEL` | По умолчанию бесплатная `meta-llama/llama-3.1-8b-instruct:free` |
 | `RATE_LIMIT_MAX`, `RATE_LIMIT_WINDOW_SECONDS` | Лимит на IP: 5 запросов / 10 минут |
@@ -95,7 +96,7 @@ app/
 ├── services/             # бизнес-логика
 │   ├── contact.py        #   оркестрация: AI + email + метрики
 │   ├── ai.py             #   вызов OpenRouter + fallback
-│   ├── email.py          #   отправка через SMTP, HTML+text
+│   ├── email.py          #   отправка писем: Resend (HTTP) с fallback на SMTP
 │   ├── email_templates.py#   шаблоны писем (owner + user)
 │   └── rate_limit.py     #   dependency для FastAPI
 ├── repositories/         # доступ к данным
