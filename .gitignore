@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+.env
+.env.local
+.idea/
+.vscode/
+.DS_Store
+storage/logs/*.log
+storage/rate_limit.json
+storage/metrics.json
+storage/requests.log
+*.egg-info/
+.pytest_cache/
