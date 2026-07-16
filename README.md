@@ -193,10 +193,44 @@ curl -X POST http://localhost:8000/api/contact \
 
 | Код | Когда |
 |---|---|
-| 422 | `validation_error` — не прошли поля, в `details` — какие именно |
+| 422 | `validation_error` — не прошли поля, в `details` — какие именно (сообщения локализованы, см. ниже) |
 | 429 | `rate_limited` — превышен лимит запросов с IP |
 | 502 | `email_failed` — не удалось доставить письмо владельцу |
 | 500 | `internal_error` — всё остальное |
+
+**Локализация сообщений валидации.** Pydantic по умолчанию отдаёт тексты
+на английском (`Field required`, `String should have at least N characters`,
+`value is not a valid email address …`). Глобальный `RequestValidationError`
+handler в `app/core/errors.py::_translate_validation_error` мапит их на
+русский по типу ошибки:
+
+| Pydantic `type` | Ответ клиенту |
+|---|---|
+| `missing` | `поле обязательно` |
+| `string_too_short` | `не короче N символов` |
+| `string_too_long` | `не длиннее N символов` |
+| `string_type` | `ожидается строка` |
+| `value_error` (EmailStr) | `некорректный email` |
+| `value_error` (custom) | текст из моего валидатора, префикс `Value error,` срезается |
+| `json_invalid` / `json_type` | `некорректный JSON` |
+
+Пример ответа при пустом теле:
+
+```json
+{
+  "error": {
+    "code": "validation_error",
+    "message": "Проверьте корректность введённых данных",
+    "details": [
+      { "field": "name",    "message": "поле обязательно" },
+      { "field": "email",   "message": "поле обязательно" },
+      { "field": "phone",   "message": "поле обязательно" },
+      { "field": "comment", "message": "поле обязательно" }
+    ]
+  },
+  "request_id": "3df4fe619810"
+}
+```
 
 ### `GET /api/health`
 

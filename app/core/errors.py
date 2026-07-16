@@ -74,7 +74,7 @@ def register_exception_handlers(app: FastAPI) -> None:
         details = [
             {
                 "field": ".".join(str(x) for x in e.get("loc", [])[1:]) or "body",
-                "message": e.get("msg", "invalid"),
+                "message": _translate_validation_error(e),
             }
             for e in exc.errors()
         ]
@@ -110,3 +110,32 @@ def register_exception_handlers(app: FastAPI) -> None:
                 _request_id(request),
             ),
         )
+
+
+def _translate_validation_error(err: dict) -> str:
+    """Русские сообщения для типовых ошибок Pydantic v2 + аккуратный проброс своих."""
+    err_type = err.get("type", "")
+    ctx = err.get("ctx") or {}
+    msg = err.get("msg", "")
+
+    # Кастомные валидаторы (ContactRequest) кладут русский текст, pydantic обёртывает
+    # его в "Value error, <текст>" — срезаем префикс.
+    if err_type == "value_error":
+        if "email" in msg.lower():
+            return "некорректный email"
+        return msg.removeprefix("Value error, ")
+
+    if err_type == "missing":
+        return "поле обязательно"
+    if err_type == "string_too_short":
+        min_len = ctx.get("min_length")
+        return f"не короче {min_len} символов" if min_len else "слишком короткое значение"
+    if err_type == "string_too_long":
+        max_len = ctx.get("max_length")
+        return f"не длиннее {max_len} символов" if max_len else "слишком длинное значение"
+    if err_type == "string_type":
+        return "ожидается строка"
+    if err_type in ("json_invalid", "json_type"):
+        return "некорректный JSON"
+
+    return msg or "некорректное значение"
